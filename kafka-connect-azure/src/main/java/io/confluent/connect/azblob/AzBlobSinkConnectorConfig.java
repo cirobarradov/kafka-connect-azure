@@ -16,6 +16,7 @@
 
 package io.confluent.connect.azblob;
 
+import io.confluent.connect.azblob.format.json.JsonFormat;
 import io.confluent.connect.azblob.storage.AzBlobStorage;
 import io.confluent.connect.azblob.format.avro.AvroFormat;
 import io.confluent.connect.storage.StorageSinkConnectorConfig;
@@ -83,9 +84,9 @@ public class AzBlobSinkConnectorConfig extends StorageSinkConnectorConfig {
         Arrays.<Object>asList(AzBlobStorage.class)
     );
 
-    //    FORMAT_CLASS_RECOMMENDER.addValidValues(
-    //        Arrays.<Object>asList(AvroFormat.class, JsonFormat.class)
-    //    );
+    FORMAT_CLASS_RECOMMENDER.addValidValues(
+            Arrays.<Object>asList(AvroFormat.class, JsonFormat.class)
+    );
 
     PARTITIONER_CLASS_RECOMMENDER.addValidValues(
         Arrays.<Object>asList(

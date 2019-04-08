@@ -55,7 +55,7 @@
     </scm>
 
     <modules>
-<!--        <module>kafka-connect-s3</module>-->
+        <module>kafka-connect-s3</module>
         <module>kafka-connect-azure</module>
     </modules>
 
