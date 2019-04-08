@@ -1,4 +1,5 @@
 /*
+<<<<<<< HEAD
  * Copyright 2017 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+=======
+ * Copyright 2019 Confluent Inc.
+ *
+ * Licensed under the Confluent Community License (the "License"); you may not use
+ * this file except in compliance with the License.  You may obtain a copy of the
+ * License at
+ *
+ * http://www.confluent.io/confluent-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OF ANY KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations under the License.
+>>>>>>> 93f29d500b19961b0e9a6491c151a5f4d7e8e388
  */
 
 package io.confluent.connect.azblob;
@@ -19,6 +34,20 @@ package io.confluent.connect.azblob;
 import io.confluent.connect.azblob.format.json.JsonFormat;
 import io.confluent.connect.azblob.storage.AzBlobStorage;
 import io.confluent.connect.azblob.format.avro.AvroFormat;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.kafka.common.config.AbstractConfig;
+import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.common.config.ConfigDef.Importance;
+import org.apache.kafka.common.config.ConfigDef.Type;
+import org.apache.kafka.common.config.ConfigDef.Width;
+import org.apache.kafka.common.config.ConfigException;
+
 import io.confluent.connect.storage.StorageSinkConnectorConfig;
 import io.confluent.connect.storage.common.ComposableConfig;
 import io.confluent.connect.storage.common.GenericRecommender;
@@ -33,23 +62,12 @@ import io.confluent.connect.storage.partitioner.FieldPartitioner;
 import io.confluent.connect.storage.partitioner.HourlyPartitioner;
 import io.confluent.connect.storage.partitioner.PartitionerConfig;
 import io.confluent.connect.storage.partitioner.TimeBasedPartitioner;
-import org.apache.kafka.common.config.AbstractConfig;
-import org.apache.kafka.common.config.ConfigDef;
-import org.apache.kafka.common.config.ConfigDef.Importance;
-import org.apache.kafka.common.config.ConfigDef.Type;
-import org.apache.kafka.common.config.ConfigDef.Width;
-import org.apache.kafka.common.config.ConfigException;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 public class AzBlobSinkConnectorConfig extends StorageSinkConnectorConfig {
 
   public static final String AZ_STORAGEACCOUNT_CONNECTION_STRING =
-      "azblob.storageaccount.connectionstring";
+          "azblob.storageaccount.connectionstring";
+  public static final String AZ_STORAGEACCOUNT_CONNECTION_STRING_DEFAULT = "";
   public static final String AZ_STORAGE_CONTAINER_NAME = "azblob.containername";
 
   public static final String AVRO_CODEC_CONFIG = "avro.codec";
@@ -74,14 +92,13 @@ public class AzBlobSinkConnectorConfig extends StorageSinkConnectorConfig {
   private static final GenericRecommender FORMAT_CLASS_RECOMMENDER = new GenericRecommender();
   private static final GenericRecommender PARTITIONER_CLASS_RECOMMENDER = new GenericRecommender();
   private static final GenericRecommender SCHEMA_GENERATOR_CLASS_RECOMMENDER =
-      new GenericRecommender();
-  private static final ParentValueRecommender AVRO_COMPRESSION_RECOMMENDER
-      = new ParentValueRecommender(FORMAT_CLASS_CONFIG, AvroFormat.class, AVRO_SUPPORTED_CODECS);
-
+          new GenericRecommender();
+  private static final ParentValueRecommender AVRO_COMPRESSION_RECOMMENDER =
+          new ParentValueRecommender(FORMAT_CLASS_CONFIG, AvroFormat.class, AVRO_SUPPORTED_CODECS);
 
   static {
     STORAGE_CLASS_RECOMMENDER.addValidValues(
-        Arrays.<Object>asList(AzBlobStorage.class)
+            Arrays.<Object>asList(AzBlobStorage.class)
     );
 
     FORMAT_CLASS_RECOMMENDER.addValidValues(
@@ -89,104 +106,89 @@ public class AzBlobSinkConnectorConfig extends StorageSinkConnectorConfig {
     );
 
     PARTITIONER_CLASS_RECOMMENDER.addValidValues(
-        Arrays.<Object>asList(
-            DefaultPartitioner.class,
-            HourlyPartitioner.class,
-            DailyPartitioner.class,
-            TimeBasedPartitioner.class,
-            FieldPartitioner.class
-        )
+            Arrays.<Object>asList(
+                    DefaultPartitioner.class,
+                    HourlyPartitioner.class,
+                    DailyPartitioner.class,
+                    TimeBasedPartitioner.class,
+                    FieldPartitioner.class
+            )
     );
 
     SCHEMA_GENERATOR_CLASS_RECOMMENDER.addValidValues(
-        Arrays.<Object>asList(
-            DefaultSchemaGenerator.class,
-            TimeBasedSchemaGenerator.class
-        )
+            Arrays.<Object>asList(
+                    DefaultSchemaGenerator.class,
+                    TimeBasedSchemaGenerator.class
+            )
     );
-
   }
-
 
   public static ConfigDef newConfigDef() {
     ConfigDef configDef = StorageSinkConnectorConfig.newConfigDef(
-        FORMAT_CLASS_RECOMMENDER,
-        AVRO_COMPRESSION_RECOMMENDER
+            FORMAT_CLASS_RECOMMENDER,
+            AVRO_COMPRESSION_RECOMMENDER
     );
     {
-      final String group = "AZ";
+      final String group = "Azure Blob Storage";
       int orderInGroup = 0;
 
       configDef.define(
-          AZ_STORAGEACCOUNT_CONNECTION_STRING,
-          Type.STRING,
-          "default",
-          Importance.MEDIUM,
-          "The connection stirng.",
-          group,
-          ++orderInGroup,
-          Width.LONG,
-          "Connection String"
+              AZ_STORAGEACCOUNT_CONNECTION_STRING,
+              Type.STRING,
+              AZ_STORAGEACCOUNT_CONNECTION_STRING_DEFAULT,
+              Importance.HIGH,
+              "The connection string used to connect to Azure storage services.",
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              "Connection String"
       );
 
       configDef.define(
-          AZ_STORAGE_CONTAINER_NAME,
-          Type.STRING,
-          "default",
-          Importance.MEDIUM,
-          "The container name.",
-          group,
-          ++orderInGroup,
-          Width.LONG,
-          "Container name"
-      );
-
-      //      configDef.define(
-      //          AVRO_CODEC_CONFIG,
-      //          Type.STRING,
-      //          AVRO_CODEC_DEFAULT,
-      //          Importance.LOW,
-      //          "The Avro compression codec to be used for output files. Available values: null, "
-      //              + "deflate, snappy and bzip
-      //              2 (codec source is org.apache.avro.file.CodecFactory)",
-      //          group,
-      //          ++orderInGroup,
-      //          Width.LONG,
-      //          "Avro compression codec"
-      //      );
-
-      configDef.define(
-          FORMAT_BYTEARRAY_EXTENSION_CONFIG,
-          Type.STRING,
-          FORMAT_BYTEARRAY_EXTENSION_DEFAULT,
-          Importance.LOW,
-          String.format(
-              "Output file extension for ByteArrayFormat. Defaults to '%s'",
-              FORMAT_BYTEARRAY_EXTENSION_DEFAULT
-          ),
-          group,
-          ++orderInGroup,
-          Width.LONG,
-          "Output file extension for ByteArrayFormat"
+              AZ_STORAGE_CONTAINER_NAME,
+              Type.STRING,
+              Importance.MEDIUM,
+              "The container name in which the blob exists.",
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              "Container name"
       );
 
       configDef.define(
-          FORMAT_BYTEARRAY_LINE_SEPARATOR_CONFIG,
-          Type.STRING,
-          // Because ConfigKey automatically trims strings, we cannot set
-          // the default here and instead inject null;
-          // the default is applied in getFormatByteArrayLineSeparator().
-          null,
-          Importance.LOW,
-          "String inserted between records for ByteArrayFormat. "
-              + "Defaults to 'System.lineSeparator()' "
-              + "and may contain escape sequences like '\\n'. "
-              + "An input record that contains the line separator will look like "
-              + "multiple records in the output Azure blob object.",
-          group,
-          ++orderInGroup,
-          Width.LONG,
-          "Line separator ByteArrayFormat"
+              FORMAT_BYTEARRAY_EXTENSION_CONFIG,
+              Type.STRING,
+              FORMAT_BYTEARRAY_EXTENSION_DEFAULT,
+              Importance.LOW,
+              String.format(
+                      "Output file extension for ByteArrayFormat. Defaults to '%s'",
+                      FORMAT_BYTEARRAY_EXTENSION_DEFAULT
+              ),
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              "Output file extension for ByteArrayFormat"
+      );
+
+      configDef.define(
+              FORMAT_BYTEARRAY_LINE_SEPARATOR_CONFIG,
+              Type.STRING,
+              /*
+               Because ConfigKey automatically trims strings, we cannot set
+               the default here and instead inject null;
+               the default is applied in getFormatByteArrayLineSeparator().
+              */
+              null,
+              Importance.LOW,
+              "String inserted between records for ByteArrayFormat. "
+                      + "Defaults to 'System.lineSeparator()' "
+                      + "and may contain escape sequences like '\\n'. "
+                      + "An input record that contains the line separator will look like "
+                      + "multiple records in the output Azure blob object.",
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              "Line separator ByteArrayFormat"
       );
     }
     return configDef;
@@ -274,11 +276,11 @@ public class AzBlobSinkConnectorConfig extends StorageSinkConnectorConfig {
       Number number = (Number) value;
       if (number.longValue() < min) {
         throw new ConfigException(name, value,
-            "Part size must be at least: " + min + " bytes (5MB)");
+                "Part size must be at least: " + min + " bytes (5MB)");
       }
       if (number.longValue() > max) {
         throw new ConfigException(name, value,
-            "Part size must be no more: " + Integer.MAX_VALUE + " bytes (~2GB)");
+                "Part size must be no more: " + Integer.MAX_VALUE + " bytes (~2GB)");
       }
     }
 
@@ -299,6 +301,7 @@ public class AzBlobSinkConnectorConfig extends StorageSinkConnectorConfig {
     }
     return FORMAT_BYTEARRAY_LINE_SEPARATOR_DEFAULT;
   }
+
 
 
   public static ConfigDef getConfig() {

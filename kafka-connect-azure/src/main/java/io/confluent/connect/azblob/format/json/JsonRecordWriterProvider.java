@@ -1,4 +1,5 @@
 /*
+<<<<<<< HEAD
  * Copyright 2017 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+=======
+ * Copyright 2019 Confluent Inc.
+ *
+ * Licensed under the Confluent Community License (the "License"); you may not use
+ * this file except in compliance with the License.  You may obtain a copy of the
+ * License at
+ *
+ * http://www.confluent.io/confluent-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OF ANY KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations under the License.
+>>>>>>> 93f29d500b19961b0e9a6491c151a5f4d7e8e388
  */
 
 package io.confluent.connect.azblob.format.json;
@@ -23,6 +38,9 @@ import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.storage.AzBlobStorage;
 import io.confluent.connect.storage.format.RecordWriter;
 import io.confluent.connect.storage.format.RecordWriterProvider;
+
+import java.io.IOException;
+
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.json.JsonConverter;
@@ -30,7 +48,6 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 
 public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSinkConnectorConfig> {
 
@@ -59,8 +76,8 @@ public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSink
       return new RecordWriter() {
         final BlobOutputStream azBlobOutputStream = storage.create(filename, true);
         final JsonGenerator writer = mapper.getFactory()
-            .createGenerator(azBlobOutputStream)
-            .setRootValueSeparator(null);
+                .createGenerator(azBlobOutputStream)
+                .setRootValueSeparator(null);
 
         @Override
         public void write(SinkRecord record) {
@@ -69,7 +86,7 @@ public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSink
             Object value = record.value();
             if (value instanceof Struct) {
               byte[] rawJson = converter
-                  .fromConnectData(record.topic(), record.valueSchema(), value);
+                      .fromConnectData(record.topic(), record.valueSchema(), value);
               azBlobOutputStream.write(rawJson);
               azBlobOutputStream.write(LINE_SEPARATOR_BYTES);
             } else {
@@ -83,7 +100,6 @@ public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSink
 
         @Override
         public void commit() {
-          log.debug("Committing");
           try {
             // Flush is required here, because closing the writer will close the underlying AZ
             // output stream before committing any data to AZ.
@@ -96,7 +112,6 @@ public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSink
 
         @Override
         public void close() {
-          log.debug("Closing writer");
           try {
             writer.close();
           } catch (IOException e) {

@@ -1,4 +1,5 @@
 /*
+<<<<<<< HEAD
  * Copyright 2017 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+=======
+ * Copyright 2019 Confluent Inc.
+ *
+ * Licensed under the Confluent Community License (the "License"); you may not use
+ * this file except in compliance with the License.  You may obtain a copy of the
+ * License at
+ *
+ * http://www.confluent.io/confluent-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OF ANY KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations under the License.
+>>>>>>> 93f29d500b19961b0e9a6491c151a5f4d7e8e388
  */
 
 package io.confluent.connect.azblob;
@@ -29,6 +44,12 @@ import io.confluent.connect.storage.partitioner.TimeBasedPartitioner;
 import io.confluent.connect.storage.partitioner.TimestampExtractor;
 import io.confluent.connect.storage.schema.StorageSchemaCompatibility;
 import io.confluent.connect.storage.util.DateTimeUtils;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.connect.data.Schema;
@@ -38,17 +59,14 @@ import org.apache.kafka.connect.errors.RetriableException;
 import org.apache.kafka.connect.errors.SchemaProjectorException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-
 public class TopicPartitionWriter {
+
   private static final Logger log = LoggerFactory.getLogger(TopicPartitionWriter.class);
 
   private final Map<String, String> commitFiles;
@@ -107,19 +125,19 @@ public class TopicPartitionWriter {
     this.writerProvider = writerProvider;
     this.partitioner = partitioner;
     this.timestampExtractor = partitioner instanceof TimeBasedPartitioner
-        ? ((TimeBasedPartitioner) partitioner).getTimestampExtractor()
-        : null;
+            ? ((TimeBasedPartitioner) partitioner).getTimestampExtractor()
+            : null;
     flushSize = connectorConfig.getInt(AzBlobSinkConnectorConfig.FLUSH_SIZE_CONFIG);
     topicsDir = connectorConfig.getString(StorageCommonConfig.TOPICS_DIR_CONFIG);
     rotateIntervalMs = connectorConfig.getLong(AzBlobSinkConnectorConfig.ROTATE_INTERVAL_MS_CONFIG);
     rotateScheduleIntervalMs =
-        connectorConfig.getLong(AzBlobSinkConnectorConfig.ROTATE_SCHEDULE_INTERVAL_MS_CONFIG);
+            connectorConfig.getLong(AzBlobSinkConnectorConfig.ROTATE_SCHEDULE_INTERVAL_MS_CONFIG);
     if (rotateScheduleIntervalMs > 0) {
       timeZone = DateTimeZone.forID(connectorConfig.getString(PartitionerConfig.TIMEZONE_CONFIG));
     }
     timeoutMs = connectorConfig.getLong(AzBlobSinkConnectorConfig.RETRY_BACKOFF_CONFIG);
     compatibility = StorageSchemaCompatibility.getCompatibility(
-        connectorConfig.getString(HiveConfig.SCHEMA_COMPATIBILITY_CONFIG));
+            connectorConfig.getString(HiveConfig.SCHEMA_COMPATIBILITY_CONFIG));
 
     buffer = new LinkedList<>();
     commitFiles = new HashMap<>();
@@ -133,8 +151,9 @@ public class TopicPartitionWriter {
     fileDelim = connectorConfig.getString(StorageCommonConfig.FILE_DELIM_CONFIG);
     extension = writerProvider.getExtension();
     zeroPadOffsetFormat = "%0"
-        + connectorConfig.getInt(AzBlobSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG)
-        + "d";
+            + connectorConfig.getInt(
+            AzBlobSinkConnectorConfig.FILENAME_OFFSET_ZERO_PAD_WIDTH_CONFIG)
+            + "d";
 
     // Initialize scheduled rotation timer if applicable
     setNextScheduledRotation();
@@ -198,11 +217,11 @@ public class TopicPartitionWriter {
         }
 
         if (!checkRotationOrAppend(
-            record,
-            currentValueSchema,
-            valueSchema,
-            encodedPartition,
-            now
+                record,
+                currentValueSchema,
+                valueSchema,
+                encodedPartition,
+                now
         )) {
           break;
         }
@@ -225,21 +244,21 @@ public class TopicPartitionWriter {
    * @returns true if rotation is being performed, false otherwise
    */
   private boolean checkRotationOrAppend(
-      SinkRecord record,
-      Schema currentValueSchema,
-      Schema valueSchema,
-      String encodedPartition,
-      long now
+          SinkRecord record,
+          Schema currentValueSchema,
+          Schema valueSchema,
+          String encodedPartition,
+          long now
   ) {
     if (compatibility.shouldChangeSchema(record, null, currentValueSchema)
-        && recordCount > 0) {
+            && recordCount > 0) {
       // This branch is never true for the first record read by this TopicPartitionWriter
       log.trace(
-          "Incompatible change of schema detected for record '{}' with encoded partition "
-              + "'{}' and current offset: '{}'",
-          record,
-          encodedPartition,
-          currentOffset
+              "Incompatible change of schema detected for record '{}' with encoded partition "
+                      + "'{}' and current offset: '{}'",
+              record,
+              encodedPartition,
+              currentOffset
       );
       currentSchemas.put(encodedPartition, valueSchema);
       nextState();
@@ -249,17 +268,17 @@ public class TopicPartitionWriter {
     } else {
       currentEncodedPartition = encodedPartition;
       SinkRecord projectedRecord = compatibility.project(
-          record,
-          null,
-          currentValueSchema
+              record,
+              null,
+              currentValueSchema
       );
       writeRecord(projectedRecord);
       buffer.poll();
       if (rotateOnSize()) {
         log.info(
-            "Starting commit and rotation for topic partition {} with start offset {}",
-            tp,
-            startOffsets
+                "Starting commit and rotation for topic partition {} with start offset {}",
+                tp,
+                startOffsets
         );
         nextState();
         // Fall through and try to rotate immediately
@@ -272,12 +291,12 @@ public class TopicPartitionWriter {
 
   private void commitOnTimeIfNoData(long now) {
     if (buffer.isEmpty()) {
-      // committing files after waiting for rotateIntervalMs time but less than flush.size
+      // Committing files after waiting for rotateIntervalMs time but less than flush.size
       // records available
       if (recordCount > 0 && rotateOnTime(currentEncodedPartition, currentTimestamp, now)) {
         log.info(
-            "Committing files after waiting for rotateIntervalMs time but less than flush.size "
-                + "records available."
+                "Committing files after waiting for rotateIntervalMs time but less than flush.size "
+                        + "records available."
         );
         setNextScheduledRotation();
 
@@ -332,34 +351,36 @@ public class TopicPartitionWriter {
     }
     // rotateIntervalMs > 0 implies timestampExtractor != null
     boolean periodicRotation = rotateIntervalMs > 0
-        && (
-        recordTimestamp - baseRecordTimestamp >= rotateIntervalMs
-            || !encodedPartition.equals(currentEncodedPartition)
+            && (
+            recordTimestamp - baseRecordTimestamp >= rotateIntervalMs
+                    || !encodedPartition.equals(currentEncodedPartition)
     );
 
     log.trace(
-        "Checking rotation on time with recordCount '{}' and encodedPartition '{}'",
-        recordCount,
-        encodedPartition
+            "Checking rotation on time with recordCount '{}' and encodedPartition '{}'",
+            recordCount,
+            encodedPartition
     );
 
     log.trace(
-        "Should apply periodic time-based rotation (rotateIntervalMs: '{}', baseRecordTimestamp: "
-            + "'{}', timestamp: '{}')? {}",
-        rotateIntervalMs,
-        baseRecordTimestamp,
-        recordTimestamp,
-        periodicRotation
+            "Should apply periodic time-based rotation"
+                    + " (rotateIntervalMs: '{}', baseRecordTimestamp: "
+                    + "'{}', timestamp: '{}')? {}",
+            rotateIntervalMs,
+            baseRecordTimestamp,
+            recordTimestamp,
+            periodicRotation
     );
 
     boolean scheduledRotation = rotateScheduleIntervalMs > 0 && now >= nextScheduledRotation;
     log.trace(
-        "Should apply scheduled rotation: (rotateScheduleIntervalMs: '{}', nextScheduledRotation:"
-            + " '{}', now: '{}')? {}",
-        rotateScheduleIntervalMs,
-        nextScheduledRotation,
-        now,
-        scheduledRotation
+            "Should apply scheduled rotation:"
+                    + " (rotateScheduleIntervalMs: '{}', nextScheduledRotation:"
+                    + " '{}', now: '{}')? {}",
+            rotateScheduleIntervalMs,
+            nextScheduledRotation,
+            now,
+            scheduledRotation
     );
     return periodicRotation || scheduledRotation;
   }
@@ -368,15 +389,15 @@ public class TopicPartitionWriter {
     if (rotateScheduleIntervalMs > 0) {
       long now = time.milliseconds();
       nextScheduledRotation = DateTimeUtils.getNextTimeAdjustedByDay(
-          now,
-          rotateScheduleIntervalMs,
-          timeZone
+              now,
+              rotateScheduleIntervalMs,
+              timeZone
       );
       if (log.isDebugEnabled()) {
         log.debug(
-            "Update scheduled rotation timer. Next rotation for {} will be at {}",
-            tp,
-            new DateTime(nextScheduledRotation).withZone(timeZone).toString()
+                "Update scheduled rotation timer. Next rotation for {} will be at {}",
+                tp,
+                new DateTime(nextScheduledRotation).withZone(timeZone).toString()
         );
       }
     }
@@ -385,10 +406,10 @@ public class TopicPartitionWriter {
   private boolean rotateOnSize() {
     boolean messageSizeRotation = recordCount >= flushSize;
     log.trace(
-        "Should apply size-based rotation (count {} >= flush size {})? {}",
-        recordCount,
-        flushSize,
-        messageSizeRotation
+            "Should apply size-based rotation (count {} >= flush size {})? {}",
+            recordCount,
+            flushSize,
+            messageSizeRotation
     );
     return messageSizeRotation;
   }
@@ -404,15 +425,15 @@ public class TopicPartitionWriter {
   }
 
   private RecordWriter getWriter(SinkRecord record, String encodedPartition)
-      throws ConnectException {
+          throws ConnectException {
     if (writers.containsKey(encodedPartition)) {
       return writers.get(encodedPartition);
     }
     String commitFilename = getCommitFilename(encodedPartition);
     log.debug(
-        "Creating new writer encodedPartition='{}' filename='{}'",
-        encodedPartition,
-        commitFilename
+            "Creating new writer encodedPartition='{}' filename='{}'",
+            encodedPartition,
+            commitFilename
     );
     RecordWriter writer = writerProvider.getRecordWriter(connectorConfig, commitFilename);
     writers.put(encodedPartition, writer);
@@ -435,17 +456,17 @@ public class TopicPartitionWriter {
   private String fileKey(String topicsPrefix, String keyPrefix, String name) {
     String suffix = keyPrefix + dirDelim + name;
     return StringUtils.isNotBlank(topicsPrefix)
-        ? topicsPrefix + dirDelim + suffix
-        : suffix;
+            ? topicsPrefix + dirDelim + suffix
+            : suffix;
   }
 
   private String fileKeyToCommit(String dirPrefix, long startOffset) {
     String name = tp.topic()
-        + fileDelim
-        + tp.partition()
-        + fileDelim
-        + String.format(zeroPadOffsetFormat, startOffset)
-        + extension;
+            + fileDelim
+            + tp.partition()
+            + fileDelim
+            + String.format(zeroPadOffsetFormat, startOffset)
+            + extension;
     return fileKey(topicsDir, dirPrefix, name);
   }
 
@@ -454,9 +475,9 @@ public class TopicPartitionWriter {
 
     if (!startOffsets.containsKey(currentEncodedPartition)) {
       log.trace(
-          "Setting writer's start offset for '{}' to {}",
-          currentEncodedPartition,
-          currentOffset
+              "Setting writer's start offset for '{}' to {}",
+              currentEncodedPartition,
+              currentOffset
       );
       startOffsets.put(currentEncodedPartition, currentOffset);
     }
@@ -481,7 +502,7 @@ public class TopicPartitionWriter {
 
   private void commitFile(String encodedPartition) {
     if (!startOffsets.containsKey(encodedPartition)) {
-      log.warn("Tried to commit file with missing starting offset partition: {}. Ignoring.");
+      log.warn("Tried to commit file with missing starting offset partition. Ignoring.");
       return;
     }
 

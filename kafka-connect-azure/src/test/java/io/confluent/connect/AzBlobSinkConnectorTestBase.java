@@ -55,9 +55,9 @@ public class AzBlobSinkConnectorTestBase extends StorageSinkTestBase {
     @Override
     protected void starting(Description description) {
       log.info(
-          "Starting test: {}.{}",
-          description.getTestClass().getSimpleName(),
-          description.getMethodName()
+              "Starting test: {}.{}",
+              description.getTestClass().getSimpleName(),
+              description.getMethodName()
       );
     }
   };

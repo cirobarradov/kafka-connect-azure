@@ -1,4 +1,5 @@
 /*
+<<<<<<< HEAD
  * Copyright 2017 Confluent Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+=======
+ * Copyright 2019 Confluent Inc.
+ *
+ * Licensed under the Confluent Community License (the "License"); you may not use
+ * this file except in compliance with the License.  You may obtain a copy of the
+ * License at
+ *
+ * http://www.confluent.io/confluent-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OF ANY KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations under the License.
+>>>>>>> 93f29d500b19961b0e9a6491c151a5f4d7e8e388
  */
 
 package io.confluent.connect.azblob.format.parquet;
@@ -25,13 +40,14 @@ import io.confluent.connect.storage.format.SchemaFileReader;
 import io.confluent.connect.storage.hive.HiveFactory;
 
 public class ParquetFormat implements Format<AzBlobSinkConnectorConfig, String> {
+
   private final AzBlobStorage storage;
   private final AvroData avroData;
 
   public ParquetFormat(AzBlobStorage storage) {
     this.storage = storage;
     this.avroData = new AvroData(
-        storage.conf().getInt(AzBlobSinkConnectorConfig.SCHEMA_CACHE_SIZE_CONFIG)
+            storage.conf().getInt(AzBlobSinkConnectorConfig.SCHEMA_CACHE_SIZE_CONFIG)
     );
   }
 
@@ -48,7 +64,7 @@ public class ParquetFormat implements Format<AzBlobSinkConnectorConfig, String> 
   @Override
   public HiveFactory getHiveFactory() {
     throw new UnsupportedOperationException(
-        "Hive integration is not currently supported in blob Connector");
+            "Hive integration is not currently supported in blob Connector");
   }
 
 }

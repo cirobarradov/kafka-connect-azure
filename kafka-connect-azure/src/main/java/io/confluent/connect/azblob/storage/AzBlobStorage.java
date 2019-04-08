@@ -72,7 +72,7 @@ public class AzBlobStorage implements Storage<AzBlobSinkConnectorConfig, Iterabl
    * @param conf the AzBlobStorage configuration.
    */
   public AzBlobStorage(AzBlobSinkConnectorConfig conf, String url) throws URISyntaxException,
-      StorageException, InvalidKeyException {
+          StorageException, InvalidKeyException {
     this.conf = conf;
     this.containerName = conf.getContainerName();
 
@@ -145,7 +145,7 @@ public class AzBlobStorage implements Storage<AzBlobSinkConnectorConfig, Iterabl
   @Override
   public SeekableInput open(String path, AzBlobSinkConnectorConfig conf) {
     throw new UnsupportedOperationException(
-        "File reading is not currently supported in AZ Blob Connector");
+            "File reading is not currently supported in AZ Blob Connector");
   }
 
   @Override
@@ -161,7 +161,7 @@ public class AzBlobStorage implements Storage<AzBlobSinkConnectorConfig, Iterabl
   public BlobOutputStream create(String path, boolean overwrite) {
     if (!overwrite) {
       throw new UnsupportedOperationException(
-          "Creating a file without overwriting is not currently supported in AZ Blob Connector");
+              "Creating a file without overwriting is not currently supported in AZ Blob Connector");
     }
 
     if (StringUtils.isBlank(path)) {
@@ -181,7 +181,7 @@ public class AzBlobStorage implements Storage<AzBlobSinkConnectorConfig, Iterabl
     return stream;
   }
 
-  public boolean bucketExists() throws URISyntaxException, StorageException {
+  public boolean containerExists() throws URISyntaxException, StorageException {
     return isNotBlank(containerName) && blobClient.getContainerReference(containerName).exists();
   }
 

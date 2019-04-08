@@ -23,7 +23,6 @@ import io.confluent.connect.azblob.format.json.JsonFormat;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.partitioner.*;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.junit.Before;
@@ -52,11 +51,9 @@ public class AzBlobSinkConnectorConfigTest extends AzBlobSinkConnectorTestBase {
   public void testStorageClass() {
     // No real test case yet
     connectorConfig = new AzBlobSinkConnectorConfig(properties);
-    String x = StorageCommonConfig.STORAGE_CLASS_CONFIG;
-    connectorConfig.getClass(x);
     assertEquals(
-        AzBlobStorage.class,
-        connectorConfig.getClass(StorageCommonConfig.STORAGE_CLASS_CONFIG)
+            AzBlobStorage.class,
+            connectorConfig.getClass(StorageCommonConfig.STORAGE_CLASS_CONFIG)
     );
   }
 
@@ -71,15 +68,15 @@ public class AzBlobSinkConnectorConfigTest extends AzBlobSinkConnectorTestBase {
   public void testRecommendedValues() {
     List<Object> expectedStorageClasses = Arrays.<Object>asList(AzBlobStorage.class);
     List<Object> expectedFormatClasses = Arrays.<Object>asList(
-        AvroFormat.class,
-        JsonFormat.class
+            AvroFormat.class,
+            JsonFormat.class
     );
     List<Object> expectedPartitionerClasses = Arrays.<Object>asList(
-        DefaultPartitioner.class,
-        HourlyPartitioner.class,
-        DailyPartitioner.class,
-        TimeBasedPartitioner.class,
-        FieldPartitioner.class
+            DefaultPartitioner.class,
+            HourlyPartitioner.class,
+            DailyPartitioner.class,
+            TimeBasedPartitioner.class,
+            FieldPartitioner.class
     );
 
     List<ConfigValue> values = AzBlobSinkConnectorConfig.getConfig().validate(properties);
@@ -170,7 +167,7 @@ public class AzBlobSinkConnectorConfigTest extends AzBlobSinkConnectorTestBase {
     List<ConfigValue> values = AzBlobSinkConnectorConfig.getConfig().validate(properties);
     for (ConfigValue val : values) {
       if(val.name().equals(AzBlobSinkConnectorConfig.AZ_STORAGEACCOUNT_CONNECTION_STRING)){
-          assertEquals(CONNECTION_STRING, val.value());
+        assertEquals(CONNECTION_STRING, val.value());
       }
     }
   }
