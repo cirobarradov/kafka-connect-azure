@@ -161,7 +161,8 @@ public class AzBlobStorage implements Storage<AzBlobSinkConnectorConfig, Iterabl
   public BlobOutputStream create(String path, boolean overwrite) {
     if (!overwrite) {
       throw new UnsupportedOperationException(
-              "Creating a file without overwriting is not currently supported in AZ Blob Connector");
+              "Creating a file without overwriting is not"
+                      + " currently supported in AZ Blob Connector");
     }
 
     if (StringUtils.isBlank(path)) {
