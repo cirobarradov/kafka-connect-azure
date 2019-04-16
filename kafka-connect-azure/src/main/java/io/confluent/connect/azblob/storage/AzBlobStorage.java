@@ -67,7 +67,8 @@ public class AzBlobStorage implements Storage<AzBlobSinkConnectorConfig, Iterabl
   private final CloudBlobContainer container;
 
   /**
-   * Construct an AzBlobStorage class given a configuration and an AZ Storage account + container.
+   * Construct an AzBlobStorage
+    Mock class given a configuration and an AZ Storage account + container.
    *
    * @param conf the AzBlobStorage configuration.
    */
