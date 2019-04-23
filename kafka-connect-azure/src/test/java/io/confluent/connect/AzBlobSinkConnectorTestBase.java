@@ -15,37 +15,29 @@
 
 package io.confluent.connect;
 
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.blob.*;
 import io.confluent.common.utils.SystemTime;
 import io.confluent.common.utils.Time;
 import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.format.avro.AvroFormat;
 import io.confluent.connect.azblob.storage.AzBlobStorage;
-import io.confluent.connect.s3.S3SinkConnectorConfig;
 import io.confluent.connect.storage.StorageSinkTestBase;
 import io.confluent.connect.storage.common.StorageCommonConfig;
 import io.confluent.connect.storage.hive.HiveConfig;
 import io.confluent.connect.storage.partitioner.PartitionerConfig;
 import io.confluent.connect.storage.schema.SchemaCompatibility;
 import io.confluent.connect.storage.schema.StorageSchemaCompatibility;
-import org.apache.curator.ensemble.exhibitor.Exhibitors;
+
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class AzBlobSinkConnectorTestBase extends StorageSinkTestBase {
 
@@ -54,9 +46,6 @@ public class AzBlobSinkConnectorTestBase extends StorageSinkTestBase {
   protected static final String AZ_TEST_URL = "az.url";
   protected static final String AZ_TEST_CONTAINER_NAME = "kafka.container";
   protected static final String AZ_TEST_CONNECTION_STRING = "az.container";
-  protected static final Time SYSTEM_TIME = new SystemTime();
-  private static final String nonExisting = "non-existing";
-  private static final String blobName = "blob";
 
   protected AzBlobSinkConnectorConfig connectorConfig;
   protected String topicsDir;
@@ -97,12 +86,6 @@ public class AzBlobSinkConnectorTestBase extends StorageSinkTestBase {
   public void setUp() throws Exception {
     super.setUp();
     connectorConfig = Mockito.spy(new AzBlobSinkConnectorConfig(properties));
-
-    CloudStorageAccount storageAccount = mockStorageAccount();
-    CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-    storage = new AzBlobStorage(connectorConfig,AZ_TEST_CONTAINER_NAME,storageAccount,
-            blobClient, blobClient.getContainerReference(AZ_TEST_CONTAINER_NAME));
-
     topicsDir = connectorConfig.getString(StorageCommonConfig.TOPICS_DIR_CONFIG);
     parsedConfig = new HashMap<>(connectorConfig.plainValues());
     compatibility = StorageSchemaCompatibility.getCompatibility(
@@ -113,48 +96,6 @@ public class AzBlobSinkConnectorTestBase extends StorageSinkTestBase {
   @Override
   public void tearDown() throws Exception {
     super.tearDown();
-  }
-
-  public CloudBlobClient newBlobClient(AzBlobSinkConnectorConfig config){
-    CloudStorageAccount storageAccount;
-    CloudBlobClient blobClient = null;
-    try {
-      storageAccount = CloudStorageAccount.parse(config.getStorageConnectionString());
-      blobClient = storageAccount.createCloudBlobClient();
-    }
-    catch (Exception e){
-      log.debug(e.toString());
-    }
-    return blobClient;
-  }
-
-  public static CloudStorageAccount mockStorageAccount() throws Exception {
-    CloudStorageAccount storageAccount = mock(CloudStorageAccount.class);
-    CloudBlobClient blobClient = mock(CloudBlobClient.class);
-    CloudBlobContainer blobContainer = mock(CloudBlobContainer.class);
-    CloudBlobContainer nonExistingContainer = mock(CloudBlobContainer.class);
-    CloudBlockBlob blockBlob = mock(CloudBlockBlob.class);
-    CloudBlockBlob nonExistingBlob = mock(CloudBlockBlob.class);
-    BlobProperties blobProperties = mock(BlobProperties.class);
-
-    when(storageAccount.createCloudBlobClient()).thenReturn(blobClient);
-//    when(storageA.parse(eq(AZ_TEST_CONNECTION_STRING))).thenReturn(storageAccount);
-    when(blockBlob.exists()).thenReturn(true);
-    when(nonExistingBlob.exists()).thenReturn(false);
-    when(blobContainer.exists()).thenReturn(true);
-    when(nonExistingContainer.exists()).thenReturn(false);
-    when(blockBlob.getProperties()).thenReturn(blobProperties);
-    when(blobProperties.getLength()).thenReturn(4096L);
-    when(blobClient.getContainerReference(eq(AZ_TEST_CONTAINER_NAME))).thenReturn(blobContainer);
-    when(blobClient.getContainerReference(eq(nonExisting))).thenReturn(nonExistingContainer);
-    when(blobContainer.getBlockBlobReference(eq(blobName))).thenReturn(blockBlob);
-    when(blobContainer.getBlockBlobReference(eq(nonExisting))).thenReturn(nonExistingBlob);
-    when(blockBlob.getName()).thenReturn(blobName);
-    when(blockBlob.openInputStream()).thenReturn(mock(BlobInputStream.class));
-    when(blockBlob.openOutputStream()).thenReturn(mock(BlobOutputStream.class));
-    when(nonExistingBlob.getName()).thenReturn(nonExisting);
-
-    return storageAccount;
   }
 }
 
