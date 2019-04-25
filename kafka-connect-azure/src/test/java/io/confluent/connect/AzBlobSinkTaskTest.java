@@ -1,5 +1,6 @@
 package io.confluent.connect;
 
+import io.confluent.connect.Utils.FileUtil;
 import io.confluent.connect.azblob.AzBlobSinkTask;
 import io.confluent.connect.azblob.storage.AzBlobStorage;
 import org.apache.kafka.common.TopicPartition;
@@ -14,14 +15,16 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Set;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.powermock.api.easymock.PowerMock.replayAll;
+import static org.powermock.api.easymock.PowerMock.verifyAll;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({AzBlobSinkTask.class,AzBlobStorage.class})
-public class AzBlobSinkTaskTest extends AzBlobMocked {
+public class AzBlobSinkTaskTest extends DataWriterAvroTest {
 
     @Before
     public void setUp() throws Exception {
@@ -51,14 +54,20 @@ public class AzBlobSinkTaskTest extends AzBlobMocked {
 
     @Test
     public void mockingAzureServices() throws Exception{
+        //replayAll();
         AzBlobSinkTask task = new AzBlobSinkTask();
         task.initialize(context);
         task.start(properties);
-        List <SinkRecord> sinkRecordList = createRecords(5,0,
+
+        //verifyAll();
+        List <SinkRecord> sinkRecordList = createRecords(7,0,
                 Collections.singleton(new TopicPartition (TOPIC, PARTITION)));
         task.put(sinkRecordList);
         task.close(context.assignment());
         task.stop();
+
+        long[] validOffsets = {0, 3, 6};
+        verify(sinkRecordList, validOffsets);
     }
 
 
