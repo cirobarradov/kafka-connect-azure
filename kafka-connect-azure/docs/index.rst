@@ -41,44 +41,44 @@ A Kafka Connect plugin is either:
 
  ::
 
-   kafka-connect-storage-cloud/kafka-connect-azure/target/kafka-<ver>-connector-azure-<ver>-jar-with-dependencies.jar
+   kafka-connect-azure/kafka-connect-azure/target/kafka-connect-azure-<ver>.jar
 
  2. a directory on the file system that contains the JAR files for the plugin and its third-party dependencies.
 
- ``kafka-connect-storage-cloud/kafka-connect-azure/target/kafka-<ver>-connector-azure-<ver>-package``
+ ``kafka-connect-azure/kafka-connect-azure/target/kafka-connect-azure-<ver>-package``
 
  ``|-- etc``
-    ``|-- kafka-connect-azure``
+    ``|-- kafka-connect-azblob``
         ``|-- quickstart--azblob.properties``
  ``|-- share``
     ``|-- doc``
-        ``|-- kafka-connect-azure``
+        ``|-- kafka-connect-azblob``
     ``|-- java``
-      ``|-- kafka-connect-azure``
+      ``|-- kafka-connect-azblob``
 
 **Installing the connector on plain Kafka stack**
 
-To install the connector at the target server location for plain Kafka, copy the uber JAR kafka-connector-azure-jar-with-dependencies.jar into KAFKA_HOME/libs/ folder and make sure configuration in KAFKA_HOME/config/connect-distributed.properties and KAFKA_HOME/config/connect-standalone.properties files matches the configuration you've tested with your Kafka connector. Any additional properties files you might need should go in the same folder KAFKA_HOME/config/
+To install the connector at the target server location for plain Kafka, copy the uber JAR kafka-connect-azure-<ver>.jar into KAFKA_HOME/libs/ folder and make sure configuration in KAFKA_HOME/config/connect-distributed.properties and KAFKA_HOME/config/connect-standalone.properties files matches the configuration you've tested with your Kafka connector. Any additional properties files you might need should go in the same folder KAFKA_HOME/config/
 
 
 **Installing the connector on Confluent Platform**
 
 
-To install the connector at the target server location for Confluent platform, check the project target folder it should contain the artifact folder kafka-connector-azure-package Follow the same directory structure you find in the build artifact and copy files into CONFLUENT_HOME directories:
+To install the connector at the target server location for Confluent platform, check the project target folder it should contain the artifact folder kafka-connect-azure-<ver>-package Follow the same directory structure you find in the build artifact and copy files into CONFLUENT_HOME directories:
 
  ::
 
-   mkdir /CONFLUENT_HOME/share/java/kafka-connect-azure
-   cp target/kafka-<ver>-connector-azure-<ver>-package/share/java/*
-   /CONFLUENT_HOME/share/java/kafka-connect-azure/
+   mkdir /CONFLUENT_HOME/share/java/kafka-connect-azblob
+   cp target/kafka-connect-azure-<ver>-package/share/java/*
+   /CONFLUENT_HOME/share/java/kafka-connect-azblob/
 
-   mkdir /CONFLUENT_HOME/etc/kafka-connect-azure
-   cp target/kafka-<ver>-connector-azure-<ver>-package/etc/*
-   /CONFLUENT_HOME/etc/kafka-connect-azure/
+   mkdir /CONFLUENT_HOME/etc/kafka-connect-azblob
+   cp target/kafka-connect-azure-<ver>-package/etc/*
+   /CONFLUENT_HOME/etc/kafka-connect-azblob/
 
-   mkdir /CONFLUENT_HOME/share/doc/kafka-connect-azure
-   cp target/kafka-<ver>-connector-azure-<ver>-package/share/doc/*
-   /CONFLUENT_HOME/share/doc/kafka-connect-azure/
+   mkdir /CONFLUENT_HOME/share/doc/kafka-connect-azblob
+   cp target/kafka-connect-azure-<ver>-package/share/doc/*
+   /CONFLUENT_HOME/share/doc/kafka-connect-azblob/
 
 
 All Configuration Variables
@@ -109,7 +109,6 @@ following parameters:
 |                                        |            | io.confluent.connect.azblob.format.json.JsonFormat                        |
 |                                        |            | io.confluent.connect.azblob.format.avro.AvroFormat                        |
 |                                        |            | io.confluent.connect.azblob.format.bytearray.ByteArrayFormat              |
-|                                        |            | io.confluent.connect.azblob.format.parquet.ParquetFormat                  |
 +----------------------------------------+------------+---------------------------------------------------------------------------+
 | schema.generator.class                 | NO         | Should be io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator |
 +----------------------------------------+------------+---------------------------------------------------------------------------+
@@ -241,10 +240,10 @@ Then, in the console producer, type in:
 
 The nine records entered are published to the Kafka topic ``azure-quickstart`` in Avro format.
 
-Step 3: Start the Azure Blob Connector
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3: Start the Azure Blob Sink Connector
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before starting the connector, please make sure that the configurations in ``etc/kafka-connect-azure/quickstart-azblob.properties`` are properly set to your configurations of azure. At a minimum, you need to set ``azblob.storageaccount.connectionstring`` and ``azblob.containername``.
+Before starting the connector, please make sure that the configurations in ``etc/kafka-connect-azblob/quickstart-azblob.properties`` are properly set to your configurations of azure. At a minimum, you need to set ``azblob.storageaccount.connectionstring`` and ``azblob.containername``.
 
 Standalone Mode
 ^^^^^^^^^^^^^^^
@@ -253,7 +252,7 @@ Use the following command when running in standalone mode
 
 ::
 
-    CONFLUENT_HOME>bin/connect-standalone etc/kafka/connect-standalone.properties etc/kafka-connect-azure/quickstart-azblob.properties
+    CONFLUENT_HOME>bin/connect-standalone etc/kafka/connect-standalone.properties etc/kafka-connect-azblob/quickstart-azblob.properties
 
 Distributed Mode
 ^^^^^^^^^^^^^^^^
@@ -319,11 +318,6 @@ Create a new connector (connector object is returned):
     }
     }’ http://localhost:8083/connectors
 
-Next, start the Azure Blob Sink connector by loading its configuration with
-the following command:
-
-``confluent load azure-sink``
-
 To check that the connector started successfully, view the connect
 worker's log by running:
 
@@ -344,18 +338,22 @@ To run all the testcases, write the following command in the terminal,
 
 System Testing
 -----------------
-This test will demonstrate the Azure-Kafka-connector sink in standalone mode. The standalone mode should be used only for testing. You should use distributed mode for a production deployment.
+This test will demonstrate the Kafka-Connect-Azure sink in standalone mode. The standalone mode should be used only for testing. You should use distributed mode for a production deployment.
 
 Create configuration file in ``quickstart-azblob.properties`` based on example below.
 
 ::
 
-  name=kafka-connect-azure
+  name=azblob-sink
   connector.class=io.confluent.connect.azblob.AzBlobSinkConnector
   tasks.max=1
   kafka.topic='azure-quickstart'
   azblob.storageaccount.connectionstring='DefaultEndpointsProtocol=https;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;'
   azblob.containername='AzureBlobContainer'
+  topics=azure-quickstart
+  storage.class=io.confluent.connect.azblob.storage.AzBlobStorage
+  format.class=io.confluent.connect.azblob.format.avro.AvroFormat
+  schema.compatibility=NONE
 
 The rest of this system test will require three terminal windows.
 
@@ -367,12 +365,11 @@ The rest of this system test will require three terminal windows.
    $ bin/zookeeper-server-start.sh config/zookeeper.properties &
    $ bin/kafka-server-start.sh config/server.properties
 
-2. In terminal 2, start kafka sink connectors:
+2. In terminal 2, start kafka-connect-azure sink connector:
 
  ::
 
-   $ connect-standalone connect-standalone.properties \
-    quickstart-azblob.properties
+   $ bin/connect-standalone etc/kafka/connect-standalone.properties etc/kafka-connect-azblob/quickstart-azblob.properties
 
 3. Verify that data is copied to topic, mentioned in the ``quickstart-azblob.properties``
 

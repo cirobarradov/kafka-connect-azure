@@ -143,6 +143,20 @@ public class AzBlobSinkConnectorConfig extends StorageSinkConnectorConfig {
       );
 
       configDef.define(
+              COMPRESSION_TYPE_CONFIG,
+              Type.STRING,
+              COMPRESSION_TYPE_DEFAULT,
+              Importance.LOW,
+              "Compression type for file written to Azure Blob. "
+                      + "Applied when using JsonFormat or ByteArrayFormat. "
+                      + "Available values: none, gzip.",
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              "Compression type"
+      );
+
+      configDef.define(
               FORMAT_BYTEARRAY_EXTENSION_CONFIG,
               Type.STRING,
               FORMAT_BYTEARRAY_EXTENSION_DEFAULT,

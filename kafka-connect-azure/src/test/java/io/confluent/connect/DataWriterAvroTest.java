@@ -45,6 +45,13 @@ public class DataWriterAvroTest extends AzBlobMocked {
         format = new AvroFormat(storage);
     }
 
+    @Override
+    protected Map<String, String> createProps() {
+        Map<String, String> props = super.createProps();
+        props.putAll(localProps);
+        return props;
+    }
+
     @Test
     public void testWriteRecords() throws Exception {
         setUp();
@@ -130,6 +137,24 @@ public class DataWriterAvroTest extends AzBlobMocked {
 
         long[] validOffsets = {0, 3, 6};
         verify(sinkRecords, validOffsets, context.assignment());
+    }
+
+    @Test
+    public void testWriteRecordsSpanningMultipleParts() throws Exception {
+        localProps.put(AzBlobSinkConnectorConfig.FLUSH_SIZE_CONFIG, "1000");
+        setUp();
+
+        task = new AzBlobSinkTask(connectorConfig, context, storage, partitioner, format, SYSTEM_TIME);
+
+        List<SinkRecord> sinkRecords = createRecords(1100);
+
+        // Perform write
+        task.put(sinkRecords);
+        task.close(context.assignment());
+        task.stop();
+
+        long[] validOffsets = {0, 1000};
+        verify(sinkRecords, validOffsets);
     }
 
     @Test

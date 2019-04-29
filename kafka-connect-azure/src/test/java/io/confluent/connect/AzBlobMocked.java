@@ -23,14 +23,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
-    private static final String blobName = "blob";
-    protected String port;
+    private static final String BLOB_NAME = "blob";
     public File azMockDir;
     protected CloudBlobClient blobClient;
 
@@ -49,15 +49,11 @@ public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
     public void setUp() throws Exception {
         super.setUp();
         azMockDir = azMockRoot.newFolder("AZ-tests-" + UUID.randomUUID().toString());
-//        azMockDir = File.createTempFile("temp-file-name", ".txt");
-        System.out.println("Create folder: " + azMockDir.getCanonicalPath());
 
         CloudStorageAccount storageAccount = mockStorageAccount();
         blobClient = storageAccount.createCloudBlobClient();
         storage = new AzBlobStorage(connectorConfig, AZ_TEST_CONTAINER_NAME, storageAccount,
                 blobClient, blobClient.getContainerReference(AZ_TEST_CONTAINER_NAME));
-
-        port = url.substring(url.lastIndexOf(":") + 1);
     }
 
     public CloudStorageAccount mockStorageAccount() throws Exception {
@@ -73,16 +69,16 @@ public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
         when(blockBlob.getProperties()).thenReturn(blobProperties);
         when(blobProperties.getLength()).thenReturn(4096L);
         when(blobClient.getContainerReference(eq(AZ_TEST_CONTAINER_NAME))).thenReturn(blobContainer);
-        when(blobContainer.getBlockBlobReference(eq(blobName))).thenReturn(blockBlob);
+        when(blobContainer.getBlockBlobReference(eq(BLOB_NAME))).thenReturn(blockBlob);
         when(blobContainer.getBlockBlobReference(anyString())).thenReturn(blockBlob);
-        when(blockBlob.getName()).thenReturn(blobName);
+        when(blockBlob.getName()).thenReturn(BLOB_NAME);
         when(blockBlob.openInputStream()).thenReturn(mock(BlobInputStream.class));
 
         BlobOutputStream blobOutputStream = mock(BlobOutputStream.class);
         blobOutputStream = new BlobOutputStream() {
             OutputStream output;
             @Override
-            public void write(byte[] bytes, int i, int i1) throws IOException {
+            public void write(byte[] bytes, int start, int end) throws IOException {
                 File temp = null;
                 try {
                     ArgumentCaptor<String> fileCaptor = ArgumentCaptor.forClass(String.class);
@@ -90,16 +86,20 @@ public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
 
                     String fileName = fileCaptor.getValue();
 
-                    String fileExtension = fileName.substring(fileName.lastIndexOf("."));
-                    fileName = fileName.substring(0,fileName.lastIndexOf("."));
-                    temp = new File(azMockDir.getPath()+"/"+fileName+fileExtension);
+                    if(connectorConfig.getString(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG).equals("gzip"))
+                        output = new GZIPOutputStream(new FileOutputStream(azMockDir.getPath() + "/"
+                                +fileName + ".gz"));
 
-                    if(!temp.exists())
-                    output = new FileOutputStream(temp.getPath());
+                    else {
+                        temp = new File(azMockDir.getPath()+"/"+fileName);
+                        if(!temp.exists()) {
+                            output = new FileOutputStream(temp.getPath());
+                        }
+                    }
                 } catch (URISyntaxException | StorageException e) {
                     e.printStackTrace();
                 }
-                output.write(bytes,i,i1);
+                output.write(bytes,start,end);
             }
 
             @Override
@@ -148,15 +148,15 @@ public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
         return AvroUtil.getRecords(in);
     }
 
-    public static Collection<Object> readRecordsJson(String fileKey,
+    public Collection<Object> readRecordsJson(String fileKey,
                                                      CompressionType compressionType) throws IOException {
-        InputStream in = new FileInputStream(fileKey);
+        InputStream in = new FileInputStream(azMockDir.getPath() + "/" + fileKey);
         return JsonUtil.getRecords(compressionType.wrapForInput(in));
     }
 
-    public static Collection<Object> readRecordsByteArray(String fileKey, CompressionType compressionType,
+    public Collection<Object> readRecordsByteArray(String fileKey, CompressionType compressionType,
                                                           byte[] lineSeparatorBytes) throws IOException {
-        InputStream in = new FileInputStream(fileKey);
+        InputStream in = new FileInputStream(azMockDir.getPath() + "/" + fileKey);
         return ByteArrayUtil.getRecords(compressionType.wrapForInput(in), lineSeparatorBytes);
     }
 

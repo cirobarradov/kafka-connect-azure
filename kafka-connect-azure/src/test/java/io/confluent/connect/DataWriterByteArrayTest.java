@@ -1,5 +1,6 @@
 package io.confluent.connect;
 
+import com.microsoft.azure.storage.blob.BlobOutputStream;
 import io.confluent.connect.Utils.FileUtil;
 import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.AzBlobSinkTask;
@@ -72,26 +73,9 @@ public class DataWriterByteArrayTest extends AzBlobMocked {
     }
 
     @Test
-    public void testGzipCompression() throws Exception {
-        CompressionType compressionType = CompressionType.GZIP;
-        localProps.put(AzBlobSinkConnectorConfig.FORMAT_CLASS_CONFIG, io.confluent.connect.s3.format.bytearray.ByteArrayFormat.class.getName());
-        localProps.put(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG, compressionType.name);
-        setUp();
-        task = new AzBlobSinkTask(connectorConfig, context, storage, partitioner, format, SYSTEM_TIME);
-
-        List<SinkRecord> sinkRecords = createByteArrayRecordsWithoutSchema(7 * context.assignment().size(), 0, context.assignment());
-        task.put(sinkRecords);
-        task.close(context.assignment());
-        task.stop();
-
-        long[] validOffsets = {0, 3, 6};
-        verify(sinkRecords, validOffsets, context.assignment(), ".bin.gz");
-    }
-
-    @Test
     public void testCustomExtensionAndLineSeparator() throws Exception {
         String extension = ".customExtensionForTest";
-        localProps.put(AzBlobSinkConnectorConfig.FORMAT_CLASS_CONFIG, io.confluent.connect.s3.format.bytearray.ByteArrayFormat.class.getName());
+        localProps.put(AzBlobSinkConnectorConfig.FORMAT_CLASS_CONFIG, ByteArrayFormat.class.getName());
         localProps.put(AzBlobSinkConnectorConfig.FORMAT_BYTEARRAY_LINE_SEPARATOR_CONFIG, "SEPARATOR");
         localProps.put(AzBlobSinkConnectorConfig.FORMAT_BYTEARRAY_EXTENSION_CONFIG, extension);
         setUp();

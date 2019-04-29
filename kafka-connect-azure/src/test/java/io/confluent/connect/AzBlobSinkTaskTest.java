@@ -30,7 +30,6 @@ public class AzBlobSinkTaskTest extends DataWriterAvroTest {
 
     protected Map<String, String> localProps = new HashMap<>();
 
-    @Before
     public void setUp() throws Exception {
         super.setUp();
         PowerMockito.whenNew(AzBlobStorage.class).withAnyArguments().thenReturn(storage);
@@ -73,6 +72,7 @@ public class AzBlobSinkTaskTest extends DataWriterAvroTest {
 
     @Test
     public void testWriteRecord() throws Exception{
+        setUp();
         AzBlobSinkTask task = new AzBlobSinkTask();
         task.initialize(context);
         task.start(properties);
@@ -150,6 +150,8 @@ public class AzBlobSinkTaskTest extends DataWriterAvroTest {
 
     @Test
     public void testWriteRecordWithPrimitives() throws Exception {
+        setUp();
+
         AzBlobSinkTask task = new AzBlobSinkTask();
         task.initialize(context);
         task.start(properties);
@@ -167,6 +169,7 @@ public class AzBlobSinkTaskTest extends DataWriterAvroTest {
     public void testPartitionerConfig() throws Exception {
         localProps.put(PartitionerConfig.PARTITIONER_CLASS_CONFIG, CustomPartitioner.class.getName());
         localProps.put("custom.partitioner.config", "arbitrary value");
+        setUp();
         AzBlobSinkTask task = new AzBlobSinkTask();
         task.initialize(context);
         task.start(properties);
