@@ -61,6 +61,7 @@
                 shipped with Confluent platform and other dependencies such as Hadoop and Avro.
                 This allows correctly setup of CLASSPATH in kafka-run-class.sh when running
                 Kafka Connect connectors. -->
+                <exclude>org.apache.kafka.connect.*</exclude>
                 <exclude>io.confluent:kafka-connect-storage-common</exclude>
                 <exclude>io.confluent:kafka-connect-storage-core</exclude>
                 <exclude>io.confluent:kafka-connect-storage-format</exclude>
