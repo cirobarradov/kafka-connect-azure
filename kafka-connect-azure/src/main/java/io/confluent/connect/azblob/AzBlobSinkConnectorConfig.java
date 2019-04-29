@@ -63,6 +63,9 @@ public class AzBlobSinkConnectorConfig extends StorageSinkConnectorConfig {
   public static final String FORMAT_BYTEARRAY_LINE_SEPARATOR_CONFIG = "format.bytearray.separator";
   public static final String FORMAT_BYTEARRAY_LINE_SEPARATOR_DEFAULT = System.lineSeparator();
 
+  public static final String COMPRESSION_TYPE_CONFIG = "azBlob.compression.type";
+  public static final String COMPRESSION_TYPE_DEFAULT = "none";
+
   private final String name;
 
   private final StorageCommonConfig commonConfig;

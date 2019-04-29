@@ -96,7 +96,7 @@ public class TopicPartitionWriter {
   }
 
   // Visible for testing
-  TopicPartitionWriter(TopicPartition tp,
+  public TopicPartitionWriter(TopicPartition tp,
                        RecordWriterProvider<AzBlobSinkConnectorConfig> writerProvider,
                        Partitioner<FieldSchema> partitioner,
                        AzBlobSinkConnectorConfig connectorConfig,

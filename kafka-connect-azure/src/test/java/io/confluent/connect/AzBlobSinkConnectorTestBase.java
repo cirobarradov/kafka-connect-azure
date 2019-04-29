@@ -46,6 +46,7 @@ public class AzBlobSinkConnectorTestBase extends StorageSinkTestBase {
   protected static final String AZ_TEST_URL = "az.url";
   protected static final String AZ_TEST_CONTAINER_NAME = "kafka.container";
   protected static final String AZ_TEST_CONNECTION_STRING = "az.container";
+  protected static final Time SYSTEM_TIME = new SystemTime();
 
   protected AzBlobSinkConnectorConfig connectorConfig;
   protected String topicsDir;
