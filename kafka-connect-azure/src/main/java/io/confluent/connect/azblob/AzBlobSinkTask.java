@@ -98,6 +98,10 @@ public class AzBlobSinkTask extends SinkTask {
     log.info("Starting SinkTask");
     try {
       connectorConfig = new AzBlobSinkConnectorConfig(props);
+
+      if (connectorConfig.getString(AzBlobSinkConnectorConfig.AZ_STORAGE_CONTAINER_NAME) == null) {
+        throw new IllegalArgumentException("Container name must not be empty");
+      }
       url = connectorConfig.getString(StorageCommonConfig.STORE_URL_CONFIG);
 
       @SuppressWarnings("unchecked")
