@@ -1,19 +1,12 @@
 package io.confluent.connect;
 
-
-import io.confluent.common.utils.SystemTime;
 import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.AzBlobSinkTask;
-import io.confluent.connect.azblob.storage.AzBlobStorage;
 import io.confluent.connect.storage.StorageSinkTestBase;
 import io.confluent.connect.storage.common.StorageCommonConfig;
-import io.confluent.connect.storage.format.Format;
-import io.confluent.connect.storage.partitioner.Partitioner;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
-import org.apache.kafka.connect.data.Time;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.junit.After;
@@ -22,12 +15,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.mock;
 
 public class AzBlobSinkTaskIT extends StorageSinkTestBase {
 

@@ -18,9 +18,11 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -61,7 +63,7 @@ public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
     public CloudStorageAccount mockStorageAccount() throws Exception {
         CloudStorageAccount storageAccount = mock(CloudStorageAccount.class);
         CloudBlobClient blobClient = mock(CloudBlobClient.class);
-        CloudBlobContainer blobContainer = mock(CloudBlobContainer.class);
+        final CloudBlobContainer blobContainer = mock(CloudBlobContainer.class);
         CloudBlockBlob blockBlob = mock(CloudBlockBlob.class);
         BlobProperties blobProperties = mock(BlobProperties.class);
 
@@ -156,5 +158,19 @@ public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
                                                           byte[] lineSeparatorBytes) throws IOException {
         InputStream in = new FileInputStream(fileKey);
         return ByteArrayUtil.getRecords(compressionType.wrapForInput(in), lineSeparatorBytes);
+    }
+
+    public List<String> listObjects(){
+        File[] listOfFiles = azMockDir.listFiles();
+
+        List<String> fileKeys = new ArrayList<>();
+        if(listOfFiles.length > 0) {
+            for (File file : listOfFiles) {
+                if (file.isFile()) {
+                    fileKeys.add(file.getName());
+                }
+            }
+        }
+        return fileKeys;
     }
 }

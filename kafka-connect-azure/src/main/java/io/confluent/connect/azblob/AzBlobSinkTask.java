@@ -70,7 +70,7 @@ public class AzBlobSinkTask extends SinkTask {
   }
 
   // Visible for testing.
-  AzBlobSinkTask(AzBlobSinkConnectorConfig connectorConfig, SinkTaskContext context,
+  public AzBlobSinkTask(AzBlobSinkConnectorConfig connectorConfig, SinkTaskContext context,
                  AzBlobStorage storage,
                  Partitioner<FieldSchema> partitioner,
                  Format<AzBlobSinkConnectorConfig, String> format,
