@@ -1,12 +1,10 @@
 package io.confluent.connect;
 
-import com.microsoft.azure.storage.blob.BlobOutputStream;
 import io.confluent.connect.Utils.FileUtil;
 import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.AzBlobSinkTask;
 import io.confluent.connect.azblob.format.bytearray.ByteArrayFormat;
 import io.confluent.connect.azblob.storage.AzBlobStorage;
-import io.confluent.connect.azblob.storage.CompressionType;
 import io.confluent.connect.storage.partitioner.DefaultPartitioner;
 import io.confluent.connect.storage.partitioner.Partitioner;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -66,7 +64,7 @@ public class DataWriterByteArrayTest extends AzBlobMocked {
         task = new AzBlobSinkTask(connectorConfig, context, storage, partitioner, format, SYSTEM_TIME);
         List<SinkRecord> sinkRecords = createByteArrayRecordsWithoutSchema(7 * context.assignment().size(), 0, context.assignment());
         task.put(sinkRecords);
-        task.close(context.assignment());
+        //task.close(context.assignment());
         task.stop();
         long[] validOffsets = {0, 3, 6};
         verify(sinkRecords, validOffsets, context.assignment(), ".bin");
