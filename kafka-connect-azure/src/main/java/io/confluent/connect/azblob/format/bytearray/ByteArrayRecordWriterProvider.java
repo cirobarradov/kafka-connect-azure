@@ -17,9 +17,11 @@ package io.confluent.connect.azblob.format.bytearray;
 
 import com.microsoft.azure.storage.blob.BlobOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.storage.AzBlobStorage;
+import io.confluent.connect.azblob.storage.CompressionType;
 import io.confluent.connect.storage.format.RecordWriter;
 import io.confluent.connect.storage.format.RecordWriterProvider;
 
@@ -54,8 +56,12 @@ public class ByteArrayRecordWriterProvider implements
 
   @Override
   public RecordWriter getRecordWriter(final AzBlobSinkConnectorConfig conf, final String filename) {
+    final boolean gz = conf.getString(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG).equals("gzip");
     return new RecordWriter() {
-      BlobOutputStream azBlobOutputStream = storage.create(filename, true);
+      BlobOutputStream azBlobOutputStream = gz ? storage.create(filename + ".gz", true):
+              storage.create(filename,true);
+      final OutputStream azBlobOutputWrapper = gz ? CompressionType.GZIP.wrapForOutput(azBlobOutputStream):
+              azBlobOutputStream;
 
       @Override
       public void write(SinkRecord record) {
@@ -63,8 +69,8 @@ public class ByteArrayRecordWriterProvider implements
         try {
           byte[] bytes = converter.fromConnectData(
                   record.topic(), record.valueSchema(), record.value());
-          azBlobOutputStream.write(bytes);
-          azBlobOutputStream.write(lineSeparatorBytes);
+          azBlobOutputWrapper.write(bytes);
+          azBlobOutputWrapper.write(lineSeparatorBytes);
         } catch (IOException | DataException e) {
           throw new ConnectException(e);
         }
@@ -73,7 +79,7 @@ public class ByteArrayRecordWriterProvider implements
       @Override
       public void commit() {
         try {
-          azBlobOutputStream.flush();
+          azBlobOutputWrapper.flush();
         } catch (IOException e) {
           throw new ConnectException(e);
         }
@@ -82,7 +88,7 @@ public class ByteArrayRecordWriterProvider implements
       @Override
       public void close() {
         try {
-          azBlobOutputStream.close();
+          azBlobOutputWrapper.close();
         } catch (IOException e) {
           throw new ConnectException(e);
         }

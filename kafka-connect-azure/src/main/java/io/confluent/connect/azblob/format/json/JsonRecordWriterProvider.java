@@ -20,10 +20,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.storage.blob.BlobOutputStream;
 import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.storage.AzBlobStorage;
+import io.confluent.connect.azblob.storage.CompressionType;
 import io.confluent.connect.storage.format.RecordWriter;
 import io.confluent.connect.storage.format.RecordWriterProvider;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
@@ -31,6 +33,8 @@ import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.print.attribute.standard.Compression;
 
 
 public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSinkConnectorConfig> {
@@ -56,11 +60,15 @@ public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSink
 
   @Override
   public RecordWriter getRecordWriter(final AzBlobSinkConnectorConfig conf, final String filename) {
+    final boolean gz = conf.getString(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG).equals("gzip");
     try {
       return new RecordWriter() {
-        final BlobOutputStream azBlobOutputStream = storage.create(filename, true);
+        final BlobOutputStream azBlobOutputStream = gz ? storage.create(filename + ".gz", true):
+                storage.create(filename,true);
+        final OutputStream azBlobOutputWrapper = gz ? CompressionType.GZIP.wrapForOutput(azBlobOutputStream):
+                azBlobOutputStream;
         final JsonGenerator writer = mapper.getFactory()
-                .createGenerator(azBlobOutputStream)
+                .createGenerator(azBlobOutputWrapper)
                 .setRootValueSeparator(null);
 
         @Override
@@ -71,8 +79,8 @@ public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSink
             if (value instanceof Struct) {
               byte[] rawJson = converter
                       .fromConnectData(record.topic(), record.valueSchema(), value);
-              azBlobOutputStream.write(rawJson);
-              azBlobOutputStream.write(LINE_SEPARATOR_BYTES);
+              azBlobOutputWrapper.write(rawJson);
+              azBlobOutputWrapper.write(LINE_SEPARATOR_BYTES);
             } else {
               writer.writeObject(value);
               writer.writeRaw(LINE_SEPARATOR);

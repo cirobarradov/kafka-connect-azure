@@ -85,47 +85,7 @@ All Configuration Variables
 ----------------------------------
 
 The Kafka Connect Azure is configured through AzBlobSinkConnectorConfig
-class using ``quickstart-azblob.properties`` file that accepts the
-following parameters:
-
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| Property Name                          | Required   | Description                                                               |
-+========================================+============+===========================================================================+
-| name                                   | YES        | Name of the Azure Blob Connector                                          |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| connector.class                        | YES        | Should be io.confluent.connect.azblob.AzBlobSinkConnector                 |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| tasks.max                              | YES        | Number of Tasks                                                           |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| azblob.storageaccount.connectionstring | YES        | Connection String Of Azure Blob Storage                                   |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| azblob.containername                   | YES        | Name Of Azure Blob Container                                              |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| kafka.topic                            | YES        | Name of the Kafka Topic                                                   |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| storage.class                          | NO         | Should be io.confluent.connect.azblob.storage.AzBlobStorage               |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| format.class                           | YES        | Format Type can be                                                        |
-|                                        |            | io.confluent.connect.azblob.format.json.JsonFormat                        |
-|                                        |            | io.confluent.connect.azblob.format.avro.AvroFormat                        |
-|                                        |            | io.confluent.connect.azblob.format.bytearray.ByteArrayFormat              |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| schema.generator.class                 | NO         | Should be io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| partitioner.class                      | NO         | Should be io.confluent.connect.storage.partitioner.DefaultPartitioner     |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| schema.compatibility                   | YES        | Schema Compatible Types can be NONE, BACKWARD, FORWARD, FULL              |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| partition.field.name                   | NO         | Name of the Partition Field                                               |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| partition.duration.ms                  | NO         | Duration of Partition                                                     |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| path.format                            | NO         | Format of path                                                            |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| locale                                 | NO         | Locale                                                                    |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
-| timezone                               | NO         | Time Zone                                                                 |
-+----------------------------------------+------------+---------------------------------------------------------------------------+
+class using ``quickstart-azblob.properties`` file that accepts the parameters provided in `configuration file <https://github.com/hashedin/kafka-connect-sqs/blob/master/docs/configuration_options.rst>`__:
 
 Edit the configuration file quickstart-azblob.properties for the
 connector:
@@ -134,11 +94,12 @@ connector:
 
     name = <NameOfTheSinkConnector>
     connector.class = io.confluent.connect.azblob.AzBlobSinkConnector
-    tasks.max = 1
+    flush.size = 1
     kafka.topic = <NameOfTheKafkaTopic>
     azblob.storageaccount.connectionstring = <Connection-String>
     azblob.containername = <Name-Of-Azure-Blob-Container>
     format.class = <Format-Of-Data>
+    storage.class: io.confluent.connect.azblob.storage.AzBlobStorage
     schema.compatibility = NONE
 
 Resources
@@ -326,10 +287,60 @@ worker's log by running:
 Azure Blob Connector Credentials
 ----------------------------------
 
+By default, the Azure Blob Sink connector looks for Azure credentials in the following locations:
+
 The ``AZ_STORAGEACCOUNT_CONNECTIONSTRING`` and ``AZ_CONTAINER_NAME`` environment variables accessible to the Connect worker processes where the connector will be deployed:
 
     ``export AZ_STORAGEACCOUNT_CONNECTIONSTRING=<Your_StorageAccount_ConnectionString>``
     ``export AZ_CONTAINER_NAME=<Your_Container_Name>``
+
+Credentials Providers
+-----------------------
+
+Azure Blob Sink Connector looks for the credentials in the following locations:
+
+1. **Environment Variables** : Azure Blob Sink Connector looks for ``AZ_STORAGEACCOUNT_CONNECTIONSTRING`` and ``AZ_CONTAINER_NAME`` in the environment variables.
+
+Example Azure Blob Connector Property File Settings
+----------------------------------------------------
+
+The example settings are contained in etc/kafka-connect-azblob/quickstart-azblob.properties as follows:
+
+::
+
+    name=azblob-sink
+    connector.class=io.confluent.connect.azblob.AzBlobSinkConnector
+    tasks.max=1
+    topics=azure-quickstart
+    flush.size=3
+
+The first few settings are common to most connectors. ``topics`` specifies the topics we want to export data from, in this case ``azure-quickstart``. The property ``flush.size`` specifies the number of records per partition the connector needs to write before completing a multipart upload to Azure Blob.
+
+::
+
+  azblob.storageaccount.connectionstring=DefaultEndpointsProtocol=https;AccountName=
+ <myaccountname>;AccountKey=<myaccountkey>;EndpointSuffix=core.windows.net
+ azblob.containername=mycontainer
+
+The next settings are specific to Azure. A mandatory setting is the name of your Azure Blob Container to host the exported Kafka records and the Connection String.
+
+::
+
+    storage.class=io.confluent.connect.azblob.storage.AzBlobStorage
+    format.class=io.confluent.connect.azblob.format.avro.AvroFormat
+    schema.generator.class=io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator
+    partitioner.class=io.confluent.connect.storage.partitioner.DefaultPartitioner
+
+These class settings are required to specify the storage interface (here AzBlob), the output file format, currently io.confluent.connect.azblob.format.avro.AvroFormat or io.confluent.connect.azblob.format.json.JsonFormat or io.confluent.connect.azblob.format.bytearray.ByteArrayFormat and the partitioner class along with its schema generator class.
+When using a format with no schema definition, it is sufficient to set the schema generator class to its default value.
+
+::
+
+    schema.compatibility=NONE
+
+Finally, schema evolution is disabled in this example by setting schema.compatibility to NONE, as explained above.
+
+For detailed descriptions for all the available configuration options of the Azure Blob connector go to `Azure Blob Connector Configuration Options <https://github.com/hashedin/kafka-connect-sqs/blob/master/docs/configuration_options.rst>`__.
 
 Unit Testing
 ----------------
@@ -361,9 +372,9 @@ The rest of this system test will require three terminal windows.
 
  ::
 
-   $ cd <path/to/Kafka>
-   $ bin/zookeeper-server-start.sh config/zookeeper.properties &
-   $ bin/kafka-server-start.sh config/server.properties
+     $ cd <path/to/Kafka>
+     $ bin/zookeeper-server-start.sh config/zookeeper.properties &
+     $ bin/kafka-server-start.sh config/server.properties
 
 2. In terminal 2, start kafka-connect-azure sink connector:
 

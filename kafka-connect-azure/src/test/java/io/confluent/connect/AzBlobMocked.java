@@ -85,21 +85,13 @@ public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
                     verify(blobContainer,atLeastOnce()).getBlockBlobReference(fileCaptor.capture());
 
                     String fileName = fileCaptor.getValue();
-
-                    if(connectorConfig.getString(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG).equals("gzip"))
-                        output = new GZIPOutputStream(new FileOutputStream(azMockDir.getPath() + "/"
-                                +fileName + ".gz"));
-
-                    else {
-                        temp = new File(azMockDir.getPath()+"/"+fileName);
-                        if(!temp.exists()) {
-                            output = new FileOutputStream(temp.getPath());
-                        }
-                    }
+                    temp = new File(azMockDir.getPath()+"/"+fileName);
+                    if(!temp.exists()) {
+                        output = new FileOutputStream(temp.getPath()); }
                 } catch (URISyntaxException | StorageException e) {
                     e.printStackTrace();
                 }
-                output.write(bytes,start,end);
+                output.write(bytes, start, end);
             }
 
             @Override
@@ -108,7 +100,7 @@ public class AzBlobMocked extends AzBlobSinkConnectorTestBase {
 
             @Override
             public void flush() throws IOException {
-                output.flush();
+                //output.flush();
             }
 
             @Override

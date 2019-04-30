@@ -42,10 +42,11 @@ public class AzBlobSinkTaskIT extends StorageSinkTestBase {
         connProps = new HashMap<String, String>();
         connProps.put(AzBlobSinkConnectorConfig.AZ_STORAGEACCOUNT_CONNECTION_STRING, System.getenv("IT_AZ_STORAGEACCOUNT_CONNECTIONSTR"));
         connProps.put(AzBlobSinkConnectorConfig.AZ_STORAGE_CONTAINER_NAME, System.getenv("IT_AZ_CONTAINER_NAME"));
-        connProps.put("format.class", "io.confluent.connect.azblob.format.avro.AvroFormat");
+        connProps.put("format.class", "io.confluent.connect.azblob.format.json.JsonFormat");
         connProps.put("storage.class", "io.confluent.connect.azblob.storage.AzBlobStorage");
         connProps.put("schema.generator.class", "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator");
         connProps.put("flush.size", "3");
+        //connProps.put("azBlob.compression.type","gzip");
 
         connProps.put(StorageCommonConfig.STORE_URL_CONFIG, "someurl");
 
@@ -83,6 +84,8 @@ public class AzBlobSinkTaskIT extends StorageSinkTestBase {
         records.add(new SinkRecord(topic, 12, null, null, SCHEMA, struct, 4));
 
         task.put(records);
+        task.close(context.assignment());
+        task.stop();
     }
 
 }

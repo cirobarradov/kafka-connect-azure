@@ -2,6 +2,7 @@ package io.confluent.connect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.connect.Utils.FileUtil;
+import io.confluent.connect.azblob.AzBlobSinkConnector;
 import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.AzBlobSinkTask;
 import io.confluent.connect.azblob.format.json.JsonFormat;
@@ -63,6 +64,7 @@ public class DataWriterJsonTest extends AzBlobMocked {
   @Test
   public void testNoSchema() throws Exception {
     localProps.put(AzBlobSinkConnectorConfig.FORMAT_CLASS_CONFIG, JsonFormat.class.getName());
+    //localProps.put(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG, "gzip");
     setUp();
     task = new AzBlobSinkTask(connectorConfig, context, storage, partitioner, format, SYSTEM_TIME);
 
@@ -90,6 +92,40 @@ public class DataWriterJsonTest extends AzBlobMocked {
 
     long[] validOffsets = {0, 3, 6};
     verify(sinkRecords, validOffsets, context.assignment(), ".json");
+  }
+
+  @Test
+  public void testGzipCompressionWithSchema() throws Exception {
+    CompressionType compressionType = CompressionType.GZIP;
+    localProps.put(AzBlobSinkConnectorConfig.FORMAT_CLASS_CONFIG, JsonFormat.class.getName());
+    localProps.put(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG, compressionType.name);
+    setUp();
+    task = new AzBlobSinkTask(connectorConfig, context, storage, partitioner, format, SYSTEM_TIME);
+
+    List<SinkRecord> sinkRecords = createRecordsInterleaved(7 * context.assignment().size(), 0, context.assignment());
+    task.put(sinkRecords);
+    task.close(context.assignment());
+    task.stop();
+
+    long[] validOffsets = {0, 3, 6};
+    verify(sinkRecords, validOffsets, context.assignment(), ".json.gz");
+  }
+
+  @Test
+  public void testGzipCompressionNoSchema() throws Exception {
+    CompressionType compressionType = CompressionType.GZIP;
+    localProps.put(AzBlobSinkConnectorConfig.FORMAT_CLASS_CONFIG, JsonFormat.class.getName());
+    localProps.put(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG, compressionType.name);
+    setUp();
+    task = new AzBlobSinkTask(connectorConfig, context, storage, partitioner, format, SYSTEM_TIME);
+
+    List<SinkRecord> sinkRecords = createJsonRecordsWithoutSchema(7 * context.assignment().size(), 0, context.assignment());
+    task.put(sinkRecords);
+    task.close(context.assignment());
+    task.stop();
+
+    long[] validOffsets = {0, 3, 6};
+    verify(sinkRecords, validOffsets, context.assignment(), ".json.gz");
   }
 
   protected List<SinkRecord> createJsonRecordsWithoutSchema(int size, long startOffset, Set<TopicPartition> partitions) {
