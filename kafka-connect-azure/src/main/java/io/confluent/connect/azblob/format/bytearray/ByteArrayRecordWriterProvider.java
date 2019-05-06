@@ -56,12 +56,13 @@ public class ByteArrayRecordWriterProvider implements
 
   @Override
   public RecordWriter getRecordWriter(final AzBlobSinkConnectorConfig conf, final String filename) {
-    final boolean gz = conf.getString(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG).equals("gzip");
+    final boolean gz = conf.getString(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG)
+            .equals("gzip");
     return new RecordWriter() {
-      BlobOutputStream azBlobOutputStream = gz ? storage.create(filename + ".gz", true):
-              storage.create(filename,true);
-      final OutputStream azBlobOutputWrapper = gz ? CompressionType.GZIP.wrapForOutput(azBlobOutputStream):
-              azBlobOutputStream;
+      BlobOutputStream azBlobOutputStream = gz ? storage.create(filename + ".gz",
+              true) : storage.create(filename,true);
+      final OutputStream azBlobOutputWrapper = gz
+              ? CompressionType.GZIP.wrapForOutput(azBlobOutputStream) : azBlobOutputStream;
 
       @Override
       public void write(SinkRecord record) {
