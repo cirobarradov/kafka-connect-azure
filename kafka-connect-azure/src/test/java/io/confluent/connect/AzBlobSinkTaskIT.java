@@ -4,6 +4,7 @@ import io.confluent.connect.azblob.AzBlobSinkConnectorConfig;
 import io.confluent.connect.azblob.AzBlobSinkTask;
 import io.confluent.connect.storage.StorageSinkTestBase;
 import io.confluent.connect.storage.common.StorageCommonConfig;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -40,12 +41,15 @@ public class AzBlobSinkTaskIT extends StorageSinkTestBase {
         super.setUp();
 
         connProps = new HashMap<String, String>();
-        connProps.put(AzBlobSinkConnectorConfig.AZ_STORAGEACCOUNT_CONNECTION_STRING, System.getenv("IT_AZ_STORAGEACCOUNT_CONNECTIONSTR"));
-        connProps.put(AzBlobSinkConnectorConfig.AZ_STORAGE_CONTAINER_NAME, System.getenv("IT_AZ_CONTAINER_NAME"));
-        connProps.put("format.class", "io.confluent.connect.azblob.format.json.JsonFormat");
+        connProps.put(AzBlobSinkConnectorConfig.AZ_STORAGEACCOUNT_CONNECTION_STRING, "DefaultEndpointsProtocol=" +
+                "https;AccountName=hashedin;AccountKey=/s6JZV6nMN7P1z9bSEbKCDHJ2tAH4Kcn8OY9thJ5HgQlBskIg2h4eMgY81bRH" +
+                "Lq3dTg2V11zc/heh1x3129YHw==;EndpointSuffix=core.windows.net");
+        connProps.put(AzBlobSinkConnectorConfig.AZ_STORAGE_CONTAINER_NAME, "azblob2");
+        connProps.put("format.class", "io.confluent.connect.azblob.format.bytearray.ByteArrayFormat");
         connProps.put("storage.class", "io.confluent.connect.azblob.storage.AzBlobStorage");
-        connProps.put("schema.generator.class", "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator");
-        connProps.put("flush.size", "3");
+//        connProps.put("schema.generator.class", "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator");
+        connProps.put("flush.size", "2");
+        //connProps.put("value.convertor","org.apache.kafka.connect.converters.ByteArrayConverter");
         //connProps.put("azBlob.compression.type","gzip");
 
         connProps.put(StorageCommonConfig.STORE_URL_CONFIG, "someurl");
@@ -83,7 +87,27 @@ public class AzBlobSinkTaskIT extends StorageSinkTestBase {
         records.add(new SinkRecord(topic, 12, null, null, SCHEMA, struct, 3));
         records.add(new SinkRecord(topic, 12, null, null, SCHEMA, struct, 4));
 
-        task.put(records);
+        List<SinkRecord> sinkRecords = new ArrayList<>();
+        for (long offset = 0, total = 0; total < 3; ++offset) {
+            for (TopicPartition tp : context.assignment()) {
+                byte[] record = ("{\"schema\":{\"type\":\"struct\",\"fields\":[ " +
+                        "{\"type\":\"boolean\",\"optional\":true,\"field\":\"booleanField\"}," +
+                        "{\"type\":\"int32\",\"optional\":true,\"field\":\"intField\"}," +
+                        "{\"type\":\"int64\",\"optional\":true,\"field\":\"longField\"}," +
+                        "{\"type\":\"string\",\"optional\":false,\"field\":\"stringField\"}]," +
+                        "\"payload\":" +
+                        "{\"booleanField\":\"true\"," +
+                        "\"intField\":" + String.valueOf(12) + "," +
+                        "\"longField\":" + String.valueOf((long) 12) + "," +
+                        "\"stringField\":str" + String.valueOf(12) +
+                        "}}").getBytes();
+                sinkRecords.add(new SinkRecord(TOPIC, tp.partition(), null, "key", null, record, offset));
+                if (++total >= 3) {
+                    break;
+                }
+            }
+        }
+        task.put(sinkRecords);
         task.close(context.assignment());
         task.stop();
     }

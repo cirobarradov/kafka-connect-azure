@@ -88,7 +88,7 @@ public class DataWriterByteArrayTest extends AzBlobMocked {
         verify(sinkRecords, validOffsets, context.assignment(), extension);
     }
 
-    protected List<SinkRecord> createByteArrayRecordsWithoutSchema(int size, long startOffset, Set<TopicPartition> partitions) {
+    public List<SinkRecord> createByteArrayRecordsWithoutSchema(int size, long startOffset, Set<TopicPartition> partitions) {
         String key = "key";
         int ibase = 12;
 

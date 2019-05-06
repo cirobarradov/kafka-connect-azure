@@ -34,8 +34,6 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.print.attribute.standard.Compression;
-
 
 public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSinkConnectorConfig> {
 
@@ -60,13 +58,15 @@ public class JsonRecordWriterProvider implements RecordWriterProvider<AzBlobSink
 
   @Override
   public RecordWriter getRecordWriter(final AzBlobSinkConnectorConfig conf, final String filename) {
-    final boolean gz = conf.getString(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG).equals("gzip");
+    final boolean gz = conf.getString(AzBlobSinkConnectorConfig.COMPRESSION_TYPE_CONFIG)
+            .equals("gzip");
     try {
       return new RecordWriter() {
-        final BlobOutputStream azBlobOutputStream = gz ? storage.create(filename + ".gz", true):
-                storage.create(filename,true);
-        final OutputStream azBlobOutputWrapper = gz ? CompressionType.GZIP.wrapForOutput(azBlobOutputStream):
-                azBlobOutputStream;
+        final BlobOutputStream azBlobOutputStream = gz
+                ? storage.create(filename + ".gz", true)
+                : storage.create(filename,true);
+        final OutputStream azBlobOutputWrapper = gz
+                ? CompressionType.GZIP.wrapForOutput(azBlobOutputStream) : azBlobOutputStream;
         final JsonGenerator writer = mapper.getFactory()
                 .createGenerator(azBlobOutputWrapper)
                 .setRootValueSeparator(null);
